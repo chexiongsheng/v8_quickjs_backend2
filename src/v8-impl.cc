@@ -92,9 +92,9 @@ void V8FinalizerWrap(JSRuntime *rt, JSValue val) {
 Isolate::Isolate() : Isolate(nullptr) {
 }
 
-Isolate::Isolate(void* external_runtime) : current_context_(nullptr) {
-    is_external_runtime_ = external_runtime != nullptr;
-    runtime_ = is_external_runtime_ ? ((JSRuntime *)external_runtime) : JS_NewRuntime();
+Isolate::Isolate(void* external_context) : current_context_(nullptr) {
+    is_external_runtime_ = external_context != nullptr;
+    runtime_ = is_external_runtime_ ? JS_GetRuntime((JSContext *)external_context) : JS_NewRuntime();
     JS_SetRuntimeOpaque(runtime_, this);
     literal_values_[kUndefinedValueIndex] = JS_Undefined();
     literal_values_[kNullValueIndex] = JS_Null();

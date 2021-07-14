@@ -5,20 +5,11 @@ on:
 
 jobs:
 
-
   build_window_dll:
     name: Windows
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v2
-    - uses: msys2/setup-msys2@v2
-      with:
-        update: true
-        install: 'cmake mingw-w64-x86_64-gcc mingw-w64-x86_64-make mingw-w64-x86_64-dlfcn'
-    - shell: msys2 {0}
-      run: |
-        echo "#! /bin/sh" > /mingw64/bin/make
-        echo "\"mingw32-make\" \"\$@\"" >> /mingw64/bin/make
     - name: Build
       run: |
         cd win
@@ -26,8 +17,8 @@ jobs:
     - name: Prepare
       shell: msys2 {0}
       run: |
-        mkdir -p qjs/Lib/Win64/
-        cp win/build/Release/v8qjs.lib qjs/Lib/Win64/
+        mkdir qjs/Lib/Win64/
+        copy win/build/Release/v8qjs.lib qjs/Lib/Win64/
     - uses: actions/upload-artifact@v2
       with:
         name: qjs_v8
