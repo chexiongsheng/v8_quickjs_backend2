@@ -15,7 +15,6 @@ jobs:
         cd win
         .\make_win64.bat
     - name: Prepare
-      shell: msys2 {0}
       run: |
         mkdir qjs/Lib/Win64/
         copy win/build/Release/v8qjs.lib qjs/Lib/Win64/
