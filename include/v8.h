@@ -780,28 +780,6 @@ public:
     JSClassID class_id_;
 
     Local<Context> current_context_;
-    
-    std::map<Context*, std::weak_ptr<Context>> context_map_;
-    
-    V8_INLINE void addContextToMap(Local<Context> ctx) {
-        std::shared_ptr<Context> sctx = ctx.val_;
-        context_map_[sctx.get()] = sctx;
-    }
-    
-    V8_INLINE void removeContextFromMap(Context *ctx) {
-        context_map_.erase(ctx);
-    }
-    
-    V8_INLINE Local<Context> findContext(Context *pctx) {
-        Local<Context> ret;
-        auto iter = context_map_.find(pctx);
-        if (iter != context_map_.end()) {
-            if (auto spt = iter->second.lock()){
-                ret.val_ = spt;
-            }
-        }
-        return ret;
-    }
 
     Isolate();
     
@@ -884,14 +862,18 @@ class V8_EXPORT Context : Data {
 public:
     V8_INLINE static Local<Context> New(Isolate* isolate) {
         auto ret = Local<Context>(new Context(isolate));
-        isolate->addContextToMap(ret);
+        ret->SetWeakPtrToOpaque(ret.val_);
         return ret;
     }
     
     V8_INLINE static Local<Context> New(Isolate* isolate, void* external_context) {
         auto ret =  Local<Context>(new Context(isolate, external_context));
-        isolate->addContextToMap(ret);
+        ret->SetWeakPtrToOpaque(ret.val_);
         return ret;
+    }
+    
+    V8_INLINE void SetWeakPtrToOpaque(std::shared_ptr<Context> sptr) {
+        JS_SetContextOpaque2(context_, new std::weak_ptr<Context>(sptr));
     }
 
     Local<Object> Global();
