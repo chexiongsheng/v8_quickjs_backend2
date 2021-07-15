@@ -644,6 +644,7 @@ Context::Context(Isolate* isolate, void* external_context) :isolate_(isolate) {
 }
 
 Context::~Context() {
+    GetIsolate()->removeContextFromMap(this);
     JS_FreeValue(context_, global_);
     if (!is_external_context_) {
         JS_FreeContext(context_);
@@ -777,6 +778,11 @@ void ObjectTemplate::InitAccessors(Local<Context> context, JSValue obj) {
             getter = JS_NewCFunctionData(context->context_, [](JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv, int magic, JSValue *func_data) {
                 Isolate* isolate = reinterpret_cast<Context*>(JS_GetContextOpaque2(ctx))->GetIsolate();
                 
+                Isolate::Scope isolateScope(isolate);
+                HandleScope handleScope(isolate);
+                v8::Local<v8::Context> context = isolate->findContext(reinterpret_cast<Context*>(JS_GetContextOpaque2(ctx)));
+                v8::Context::Scope contextScope(context);
+                
                 PropertyCallbackInfo<Value> callbackInfo;
                 callbackInfo.isolate_ = isolate;
                 callbackInfo.context_ = ctx;
@@ -804,6 +810,11 @@ void ObjectTemplate::InitAccessors(Local<Context> context, JSValue obj) {
             JS_INITPTR(func_data[0], JS_TAG_EXTERNAL, (void*)it.second.setter_);
             setter = JS_NewCFunctionData(context->context_, [](JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv, int magic, JSValue *func_data) {
                 Isolate* isolate = reinterpret_cast<Context*>(JS_GetContextOpaque2(ctx))->GetIsolate();
+                
+                Isolate::Scope isolateScope(isolate);
+                HandleScope handleScope(isolate);
+                v8::Local<v8::Context> context = isolate->findContext(reinterpret_cast<Context*>(JS_GetContextOpaque2(ctx)));
+                v8::Context::Scope contextScope(context);
                 
                 PropertyCallbackInfo<void> callbackInfo;
                 callbackInfo.isolate_ = isolate;
@@ -890,6 +901,12 @@ MaybeLocal<Function> FunctionTemplate::GetFunction(Local<Context> context) {
     
     JSValue func = JS_NewCFunctionData(context->context_, [](JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv, int magic, JSValue *func_data) {
         Isolate* isolate = reinterpret_cast<Context*>(JS_GetContextOpaque2(ctx))->GetIsolate();
+        
+        Isolate::Scope isolateScope(isolate);
+        HandleScope handleScope(isolate);
+        v8::Local<v8::Context> context = isolate->findContext(reinterpret_cast<Context*>(JS_GetContextOpaque2(ctx)));
+        v8::Context::Scope contextScope(context);
+        
         FunctionCallback callback = (FunctionCallback)(JS_VALUE_GET_PTR(func_data[0]));
         int32_t internal_field_count;
         JS_ToInt32(ctx, &internal_field_count, func_data[1]);

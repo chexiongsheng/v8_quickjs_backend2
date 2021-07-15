@@ -780,6 +780,28 @@ public:
     JSClassID class_id_;
 
     Local<Context> current_context_;
+    
+    std::map<Context*, std::weak_ptr<Context>> context_map_;
+    
+    V8_INLINE void addContextToMap(Local<Context> ctx) {
+        std::shared_ptr<Context> sctx = ctx.val_;
+        context_map_[sctx.get()] = sctx;
+    }
+    
+    V8_INLINE void removeContextFromMap(Context *ctx) {
+        context_map_.erase(ctx);
+    }
+    
+    V8_INLINE Local<Context> findContext(Context *pctx) {
+        Local<Context> ret;
+        auto iter = context_map_.find(pctx);
+        if (iter != context_map_.end()) {
+            if (auto spt = iter->second.lock()){
+                ret.val_ = spt;
+            }
+        }
+        return ret;
+    }
 
     Isolate();
     
@@ -861,11 +883,15 @@ V8_INLINE Local<Boolean> False(Isolate* isolate) {
 class V8_EXPORT Context : Data {
 public:
     V8_INLINE static Local<Context> New(Isolate* isolate) {
-        return Local<Context>(new Context(isolate));
+        auto ret = Local<Context>(new Context(isolate));
+        isolate->addContextToMap(ret);
+        return ret;
     }
     
     V8_INLINE static Local<Context> New(Isolate* isolate, void* external_context) {
-        return Local<Context>(new Context(isolate, external_context));
+        auto ret =  Local<Context>(new Context(isolate, external_context));
+        isolate->addContextToMap(ret);
+        return ret;
     }
 
     Local<Object> Global();
