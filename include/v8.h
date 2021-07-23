@@ -984,6 +984,13 @@ public:
         if (!weak_ && val_.SupportWeak()) {
             val_.DecRef(isolate_);
         }
+        if (weak_) {
+            ObjectUserData* object_udata = reinterpret_cast<ObjectUserData*>(val_.GetUserData(isolate_));
+            if (object_udata) {
+                object_udata->callback_ = nullptr;
+                object_udata->parameter_ = nullptr;
+            }
+        }
         isolate_ = nullptr;
         val_ = Local<T>();
         weak_ = false;
