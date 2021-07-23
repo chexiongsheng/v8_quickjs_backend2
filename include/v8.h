@@ -1048,7 +1048,8 @@ public:
             this->val_.SetGlobal(this->isolate_, reinterpret_cast<Value*>(&this->store_));
         }
         
-        other.weak_ = true;
+        other.val_ = Local<T>();
+        other.weak_ = false;
         other.isolate_ = nullptr;
     }
     
