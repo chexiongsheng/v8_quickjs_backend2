@@ -1064,7 +1064,8 @@ public:
               this->weak_ = rhs.weak_;
               this->val_.SetGlobal(this->isolate_, reinterpret_cast<Value*>(&(this->store_)));
               
-              rhs.weak_ = true;
+              rhs.val_ = Local<T>();
+              rhs.weak_ = false;
               rhs.isolate_ = nullptr;
           }
         }
